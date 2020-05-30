@@ -24,7 +24,7 @@ class MyWindow(QMainWindow):
 
     def clicked(self):
         x = np.array([1, 2, 3])
-        x = NeuralNetwork.sigmoid_unipolar_function(x)
+        x = NeuralNetwork.sigmoid_unipolar_function()
         self.label.setText(np.array_str(x))
         self.update()
 
