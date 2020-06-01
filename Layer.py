@@ -1,6 +1,6 @@
 import numpy as np
 
-class HiddenLayer():
+class Layer():
 
     def __init__(self, input_size, output_size, activation, activation_prime):
         self.weights = np.random.rand(input_size, output_size) - 0.5

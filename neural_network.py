@@ -1,4 +1,5 @@
 import numpy as np
+from Layer import Layer
 import pandas as pd
 import matplotlib.pyplot as plt
 import random
@@ -8,6 +9,21 @@ class NeuralNetwork:
 
     def __init__(self):
         self.layers = []
+
+    def create_layers(self, feature_size, output_size, layers_sizes, activation, activation_prime):
+
+            if len(layers_sizes) == 0:
+                self.add_layer(Layer(feature_size, output_size, activation, activation_prime))
+            elif len(layers_sizes) == 1:
+                self.add_layer(Layer(feature_size, layers_sizes[0], activation, activation_prime))
+                self.add_layer(Layer(layers_sizes[0], output_size, activation, activation_prime))
+            else:
+                self.add_layer(Layer(feature_size, layers_sizes[0], activation, activation_prime))
+                for i in range(1, len(layers_sizes)-1):
+                    self.add_layer(Layer(layers_sizes[i - 1], layers_sizes[i], activation, activation_prime))
+                self.add_layer(Layer(layers_sizes[len(layers_sizes) - 1], output_size, activation, activation_prime))
+
+            return None
 
     def add_layer(self, layer):
         self.layers.append(layer)
@@ -45,17 +61,16 @@ class NeuralNetwork:
                     error = layer.back_propagation(error, learning_rate)
 
             # calculate average error on all samples
-            err /= samples
-            print('epoch %d/%d   error=%f' % (i + 1, epochs, err))
+
+            print('epoch %d/%d   error=%f' % (i + 1, epochs, np.mean(err)/samples))
 
 
 
-    @staticmethod
     def sigmoid_bipolar_function(self, x):
         return (1-np.exp(-x))/(1 + np.exp(-x))
 
     def mse(self, y_true, y_pred):
-        return np.mean(np.power(y_true - y_pred, 2))
+        return np.power(y_true - y_pred, 2)
 
     def mse_prime(self, y_true, y_pred):
         return 2 * (y_pred - y_true) / y_true.size
@@ -66,8 +81,18 @@ class NeuralNetwork:
     def tanh_prime(x):
         return 1 - np.tanh(x) ** 2
 
-    def sigmoid(x):
-        return 1 / (1 + np.exp(-x))  # activation function
+    def sigmoid_unipolar_function(self, x):
+        "Numerically stable sigmoid function."
+        if x >= 0:
+            z = np.exp(-x)
+            return 1 / (1 + z)
+        else:
+            # if x is less than zero then z will be small, denom can't be
+            # zero because it's 1+z.
+            z = np.exp(x)
+            return z / (1 + z)
 
-    def sigmoid_prime(x):
-        return x * (1 - x)  # derivative of sigmoid
+    def sigmoid_unipolar_prime(self, z):
+        return self.sigmoid_unipolar_function(z) * (1 - self.sigmoid_unipolar_function(z))
+
+
