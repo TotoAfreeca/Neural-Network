@@ -10,6 +10,9 @@ class NeuralNetwork:
     def __init__(self):
         self.layers = []
 
+    def add_layer(self, layer):
+        self.layers.append(layer)
+
     def create_layers(self, feature_size, output_size, layers_sizes, activation, activation_prime):
 
         if len(layers_sizes) > 0:
@@ -20,8 +23,9 @@ class NeuralNetwork:
         else:
             self.add_layer(Layer(feature_size, output_size, activation, activation_prime))
 
-    def add_layer(self, layer):
-        self.layers.append(layer)
+    def randomize_layers(self):
+        for layer in self.layers:
+            layer.initialize_random_weights()
 
     def predict(self, input_data):
         samples = len(input_data)
