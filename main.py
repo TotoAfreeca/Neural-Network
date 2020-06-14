@@ -132,11 +132,7 @@ class Window(QTabWidget):
             for j in range(0, self.network.layers[0].output_size):
                 ed.append([vertex_name, 'h'+str(1)+str(j+1), np.round(self.network.layers[0].weights[i, j], 3)])
 
-        vertex_sum = 1
-
-        vertex_name = 0
         for layer_number in range(1, len(self.network.layers)):
-            layer_size = self.network.layers[layer_number].input_size
             prev_layer_size = self.network.layers[layer_number-1].output_size
             for i in range(0, prev_layer_size):
                 vertex_name = 'h'+str(layer_number)+str(i+1)
