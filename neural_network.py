@@ -12,18 +12,13 @@ class NeuralNetwork:
 
     def create_layers(self, feature_size, output_size, layers_sizes, activation, activation_prime):
 
-            if len(layers_sizes) == 0:
-                self.add_layer(Layer(feature_size, output_size, activation, activation_prime))
-            elif len(layers_sizes) == 1:
-                self.add_layer(Layer(feature_size, layers_sizes[0], activation, activation_prime))
-                self.add_layer(Layer(layers_sizes[0], output_size, activation, activation_prime))
-            else:
-                self.add_layer(Layer(feature_size, layers_sizes[0], activation, activation_prime))
-                for i in range(1, len(layers_sizes)-1):
-                    self.add_layer(Layer(layers_sizes[i - 1], layers_sizes[i], activation, activation_prime))
-                self.add_layer(Layer(layers_sizes[len(layers_sizes) - 1], output_size, activation, activation_prime))
-
-            return None
+        if len(layers_sizes) > 0:
+            self.add_layer(Layer(feature_size, layers_sizes[0], activation, activation_prime))
+            for i in range(0, len(layers_sizes)-1):
+                self.add_layer(Layer(layers_sizes[i], layers_sizes[i+1], activation, activation_prime))
+            self.add_layer(Layer(layers_sizes[-1], output_size, activation, activation_prime))
+        else:
+            self.add_layer(Layer(feature_size, output_size, activation, activation_prime))
 
     def add_layer(self, layer):
         self.layers.append(layer)
