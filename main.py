@@ -25,11 +25,11 @@ class Window(QTabWidget):
         self.create_tab = QWidget()
         self.addTab(self.create_tab, "Create")
 
-        # Create Window
-        self.learning_rate = QDoubleSpinBox()
-        self.learning_rate.setRange(0.00, 1.00)
-        self.learning_rate.setValue(0.1)
-        self.learning_rate.setSingleStep(0.01)
+        self.train_tab = QWidget()
+        self.addTab(self.train_tab, "Train")
+
+
+        # Create Tab
         regex = r"^(\s*(\+)?\d+(?:\.\d)?\s*,\s*)+(-|\+)?\d+(?:\.\d+)?\s*$"
         #regex = r"/^(\s*|\d+)$/"
         validator = QtGui.QRegExpValidator(QtCore.QRegExp(regex), self)
@@ -41,53 +41,110 @@ class Window(QTabWidget):
         self.file_button.clicked.connect(self.open_file_dialog)
         self.file_text_edit = QLineEdit()
         self.file_text_edit.setReadOnly(True)
+
+        self.unipolar = QRadioButton("Unipolar sigmoid function")
+        self.unipolar.toggled.connect(lambda: self.select_option(self.unipolar))
+        self.unipolar.setChecked(True)
+        self.tanh = QRadioButton("Hyperbolic tangent function")
+        self.tanh.toggled.connect(lambda: self.select_option(self.tanh))
+
+        self.activation = NeuralNetwork.sigmoid_unipolar_function
+        self.activation_prime = NeuralNetwork.sigmoid_unipolar_prime
+
         self.figure = plt.figure(figsize=(100, 100))
-        self.canvas = FigureCanvas(self.figure)
+        self.canvas_create = FigureCanvas(self.figure)
 
 
+
+        #train tab
+
+        self.learning_rate = QDoubleSpinBox()
+        self.learning_rate.setRange(0.0001, 0.9999)
+        self.learning_rate.setValue(0.1)
+        self.learning_rate.setSingleStep(0.01)
+        self.learning_rate.setDecimals(4)
+
+        self.epochs_number = QSpinBox()
+        self.epochs_number.setRange(1, 100000)
+        self.epochs_number.setValue(100)
+        self.epochs_number.setSingleStep(1)
+        self.canvas_train = FigureCanvas(self.figure)
+
+
+
+        self.train_tab_ui()
         self.create_tab_ui()
+
 
     def create_tab_ui(self):
 
 
-        toolbar = NavigationToolbar(self.canvas, self)
+        toolbar_create = NavigationToolbar(self.canvas_create, self)
         data_form = QFormLayout()
-        function_data = QHBoxLayout()
-        function_data.addWidget(self.learning_rate)
-        function_data.addWidget(QLabel('Coma separated layers sizes:'))
-        function_data.addWidget(self.layers_line_edit)
-        data_form.addRow('Learning rate:', function_data)
+        network_data = QHBoxLayout()
+        network_data.addWidget(self.layers_line_edit)
+        data_form.addRow('Coma separated layers sizes:', network_data)
 
         file_data = QHBoxLayout()
         file_data.addWidget(self.file_button)
         file_data.addWidget(self.file_text_edit)
+
+        functions_data = QHBoxLayout()
+        functions_data.addWidget(self.unipolar)
+        functions_data.addWidget(self.tanh)
+        data_form.addRow(functions_data)
+
         data_form.addRow(file_data)
-        data_form.addRow(toolbar)
-        network_plot = QHBoxLayout()
-        network_plot.addWidget(QLabel(""))
-        network_plot.addWidget(self.canvas)
-        network_plot.addWidget(QLabel(""))
-        data_form.addRow(network_plot)
+        data_form.addRow(toolbar_create)
+
+        network_plot_create = QHBoxLayout()
+        network_plot_create.addWidget(QLabel(""))
+        network_plot_create.addWidget(self.canvas_create)
+        network_plot_create.addWidget(QLabel(""))
+        data_form.addRow(network_plot_create)
 
         button = QPushButton('CREATE')
         button.clicked.connect(self.create_network)
         data_form.addRow(button)
         self.layer_sizes = []
+
         self.create_tab.setLayout(data_form)
+
+    def train_tab_ui(self):
+        toolbar_train = NavigationToolbar(self.canvas_train, self)
+        train_form = QFormLayout()
+        train_data = QHBoxLayout()
+        train_data.addWidget(self.learning_rate)
+        train_data.addWidget(QLabel("No. epochs"))
+        train_data.addWidget(self.epochs_number)
+        train_form.addRow("Learning rate:", train_data)
+
+
+        network_plot_train = QHBoxLayout()
+        network_plot_train.addWidget(self.canvas_train)
+        train_form.addRow(toolbar_train)
+        train_form.addRow(network_plot_train)
+
+        self.train_tab.setLayout(train_form)
+
 
     def select_option(self, b):
 
-        if b.text() == "Max":
+        if b.text() == "Unipolar sigmoid function":
             if b.isChecked() == True:
-                self.find_max = 1
+                self.activation_function = NeuralNetwork.sigmoid_unipolar_function
+                self.activation_prime = NeuralNetwork.sigmoid_unipolar_prime
             else:
-                self.find_max = 0
+                self.activation_function = NeuralNetwork.tanh
+                self.activation_prime = NeuralNetwork.tanh_prime
 
-        if b.text() == "Min":
+        if b.text() == "Hyperbolic tangent function":
             if b.isChecked() == True:
-                self.find_max = 0
+                self.activation_function = NeuralNetwork.tanh
+                self.activation_prime = NeuralNetwork.tanh_prime
             else:
-                self.find_max = 1
+                self.activation_function = NeuralNetwork.sigmoid_unipolar_function
+                self.activation_prime = NeuralNetwork.sigmoid_unipolar_prime
 
 
     def open_file_dialog(self):
@@ -110,16 +167,19 @@ class Window(QTabWidget):
 
 
 
-
-
     def create_network(self):
 
         input_size = 3
         output_size = 4
 
         self.network = NeuralNetwork()
-        self.network.create_layers(input_size, output_size, self.layer_sizes, self.network.sigmoid_unipolar_function,
-                                   self.network.sigmoid_unipolar_prime)
+        self.network.create_layers(input_size, output_size, self.layer_sizes, self.activation,
+                                   self.activation_prime)
+
+        self.plot_network()
+
+
+    def plot_network(self):
 
         self.figure.clear()
         G = nx.DiGraph()
@@ -144,7 +204,7 @@ class Window(QTabWidget):
                                    np.round(self.network.layers[layer_number].weights[i, j], 3)])
 
         # ed = insert(ed, 2,list(np.around(self.network.layers[0].weights, 3).flatten()) , axis=1)
-        print(ed)
+        # print(ed)
 
 
         # ed = [['x1', 4, -1],
@@ -161,10 +221,11 @@ class Window(QTabWidget):
         nx.draw(G, with_labels=True, pos=pos, font_weight='bold')
         edge_labels = nx.get_edge_attributes(G, 'weight')
 
-        nx.draw_networkx_edge_labels(G, pos=pos, font_weight='bold', label_pos=0.8, edge_labels=edge_labels)
+        nx.draw_networkx_edge_labels(G, pos=pos, font_weight='bold', label_pos=0.85, edge_labels=edge_labels)
 
 
-        self.canvas.draw()
+        self.canvas_create.draw()
+        self.canvas_train.draw()
 
 
 

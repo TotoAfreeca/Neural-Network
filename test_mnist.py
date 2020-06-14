@@ -49,13 +49,13 @@ y_test = np_utils.to_categorical(y_test)
 
 # Network
 net = NeuralNetwork()
-net.add_layer(Layer(28 * 28, 100, sigmoid_unipolar_function, sigmoid_unipolar_prime))                # input_shape=(1, 28*28)    ;   output_shape=(1, 100)
-net.add_layer(Layer(100, 16, sigmoid_unipolar_function, sigmoid_unipolar_prime))                   # input_shape=(1, 100)      ;   output_shape=(1, 50)
-net.add_layer(Layer(16, 10, sigmoid_unipolar_function, sigmoid_unipolar_prime))                    # input_shape=(1, 50)       ;   output_shape=(1, 10)
+net.add_layer(Layer(28 * 28, 100, tanh, tanh_prime))                # input_shape=(1, 28*28)    ;   output_shape=(1, 100)
+net.add_layer(Layer(100, 16, tanh, tanh_prime))                   # input_shape=(1, 100)      ;   output_shape=(1, 50)
+net.add_layer(Layer(16, 10, tanh, tanh_prime))                    # input_shape=(1, 50)       ;   output_shape=(1, 10)
 
 # train on 1000 samplesghkdsaw
 # as we didn't implemented mini-batch GD, training will be pretty slow if we update at each iteration on 60000 samples...
-net.train(x_train[0:1000], y_train[0:1000], epochs=150, learning_rate=0.1)
+net.train(x_train[0:1000], y_train[0:1000], epochs=150, learning_rate=0.05)
 
 # test on 3 samples
 out = net.predict(x_test[2501:2510])
