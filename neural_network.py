@@ -56,13 +56,13 @@ class NeuralNetwork:
                 err += self.mse(y_train[j], output)
 
                 # backward propagation
-                error = y_train[j] - output
+                error = self.mse_prime(y_train[j], output)
                 for layer in reversed(self.layers):
                     error = layer.back_propagation(error, learning_rate)
 
             # calculate average error on all samples
-
-            print('epoch %d/%d   error=%f' % (i + 1, epochs, np.mean(err)/samples))
+            err /= samples
+            print('epoch %d/%d   error=%f' % (i + 1, epochs, err))
 
 
 
@@ -70,11 +70,10 @@ class NeuralNetwork:
         return (1-np.exp(-x))/(1 + np.exp(-x))
 
     def mse(self, y_true, y_pred):
-        return np.power(y_true - y_pred, 2)
+        return np.mean(np.power(y_true - y_pred, 2));
 
     def mse_prime(self, y_true, y_pred):
-        return 2 * (y_pred - y_true) / y_true.size
-
+        return 2 * (y_pred - y_true) / y_true.size;
     def tanh(x):
         return np.tanh(x)
 

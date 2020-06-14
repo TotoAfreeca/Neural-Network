@@ -2,6 +2,7 @@ from unittest import TestCase
 from neural_network import NeuralNetwork
 from Layer import Layer
 import numpy as np
+
 class TestNeuralNetwork(TestCase):
     def setUp(self):
         self.neural_network = NeuralNetwork()
