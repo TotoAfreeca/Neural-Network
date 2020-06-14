@@ -65,6 +65,7 @@ class NeuralNetwork:
 
 
 
+
     def sigmoid_bipolar_function(self, x):
         return (1-np.exp(-x))/(1 + np.exp(-x))
 
@@ -73,24 +74,25 @@ class NeuralNetwork:
 
     def mse_prime(self, y_true, y_pred):
         return 2 * (y_pred - y_true) / y_true.size;
+
+    def sigmoid_unipolar_function(self, x):
+        pos_mask = (x >= 0)
+        neg_mask = (x < 0)
+        z = np.zeros_like(x)
+        z[pos_mask] = np.exp(-x[pos_mask])
+        z[neg_mask] = np.exp(x[neg_mask])
+        top = np.ones_like(x)
+        top[neg_mask] = z[neg_mask]
+        return top / (1 + z)
+
+    def sigmoid_unipolar_prime(self, z):
+        return self.sigmoid_unipolar_function(z) * (1 - self.sigmoid_unipolar_function(z))
+
     def tanh(x):
         return np.tanh(x)
 
     def tanh_prime(x):
         return 1 - np.tanh(x) ** 2
 
-    def sigmoid_unipolar_function(self, x):
-        "Numerically stable sigmoid function."
-        if x >= 0:
-            z = np.exp(-x)
-            return 1 / (1 + z)
-        else:
-            # if x is less than zero then z will be small, denom can't be
-            # zero because it's 1+z.
-            z = np.exp(x)
-            return z / (1 + z)
-
-    def sigmoid_unipolar_prime(self, z):
-        return self.sigmoid_unipolar_function(z) * (1 - self.sigmoid_unipolar_function(z))
 
 
