@@ -58,16 +58,13 @@ class NeuralNetwork:
                 error = self.mse_prime(y_train[j], output)
                 for layer in reversed(self.layers):
                     error = layer.back_propagation(error, learning_rate)
-
+            print('Amax = ' + str(np.amax(self.layers[0].weights)) + '\n')
             # calculate average error on all samples
             err /= samples
+            self.err = err
             print('epoch %d/%d   error=%f' % (i + 1, epochs, err))
 
 
-
-
-    def sigmoid_bipolar_function(self, x):
-        return (1-np.exp(-x))/(1 + np.exp(-x))
 
     def mse(self, y_true, y_pred):
         return np.mean(np.power(y_true - y_pred, 2));
@@ -88,10 +85,10 @@ class NeuralNetwork:
     def sigmoid_unipolar_prime(self, z):
         return self.sigmoid_unipolar_function(z) * (1 - self.sigmoid_unipolar_function(z))
 
-    def tanh(x):
+    def tanh(self, x):
         return np.tanh(x)
 
-    def tanh_prime(x):
+    def tanh_prime(self, x):
         return 1 - np.tanh(x) ** 2
 
 

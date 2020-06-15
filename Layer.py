@@ -35,6 +35,7 @@ class Layer():
         self.weights -= learning_rate * weights_error
         self.bias -= learning_rate * output_error
 
+
         return self.activation_prime(self.input) * input_error
 
     def initialize_random_weights(self):

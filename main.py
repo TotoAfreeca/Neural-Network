@@ -8,6 +8,7 @@ from PyQt5 import QtCore, QtGui
 import matplotlib.pyplot as plt
 import pandas as pd
 import networkx as nx
+import time
 from networkx.drawing.nx_agraph import graphviz_layout
 
 from matplotlib import cm, colors
@@ -48,8 +49,8 @@ class Window(QTabWidget):
         self.tanh = QRadioButton("Hyperbolic tangent function")
         self.tanh.toggled.connect(lambda: self.select_option(self.tanh))
 
-        self.activation = NeuralNetwork.sigmoid_unipolar_function
-        self.activation_prime = NeuralNetwork.sigmoid_unipolar_prime
+        self.activation = self.sigmoid_unipolar_function
+        self.activation_prime = self.sigmoid_unipolar_prime
 
         self.figure = plt.figure(figsize=(100, 100))
         self.canvas_create = FigureCanvas(self.figure)
@@ -68,8 +69,12 @@ class Window(QTabWidget):
         self.epochs_number.setRange(1, 100000)
         self.epochs_number.setValue(100)
         self.epochs_number.setSingleStep(1)
+
         self.canvas_train = FigureCanvas(self.figure)
 
+        self.randomize_button = QPushButton('Initialize weights')
+        self.randomize_button.clicked.connect(self.randomize)
+        self.train_by_steps_button = QPushButton('Train ' + self.epochs_number.text() + ' epochs')
 
 
         self.train_tab_ui()
@@ -106,6 +111,8 @@ class Window(QTabWidget):
         button = QPushButton('CREATE')
         button.clicked.connect(self.create_network)
         data_form.addRow(button)
+
+        self.epochs_number.editingFinished.connect(self.epochs_number_edited)
         self.layer_sizes = []
 
         self.create_tab.setLayout(data_form)
@@ -115,15 +122,22 @@ class Window(QTabWidget):
         train_form = QFormLayout()
         train_data = QHBoxLayout()
         train_data.addWidget(self.learning_rate)
-        train_data.addWidget(QLabel("No. epochs"))
+        train_data.addWidget(QLabel('No. epochs'))
         train_data.addWidget(self.epochs_number)
-        train_form.addRow("Learning rate:", train_data)
+        train_form.addRow('Learning rate:', train_data)
 
 
         network_plot_train = QHBoxLayout()
         network_plot_train.addWidget(self.canvas_train)
         train_form.addRow(toolbar_train)
         train_form.addRow(network_plot_train)
+
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.randomize_button)
+        self.train_by_steps_button.clicked.connect(self.train_test)
+        buttons.addWidget(self.train_by_steps_button)
+
+        train_form.addRow(buttons)
 
         self.train_tab.setLayout(train_form)
 
@@ -132,19 +146,19 @@ class Window(QTabWidget):
 
         if b.text() == "Unipolar sigmoid function":
             if b.isChecked() == True:
-                self.activation_function = NeuralNetwork.sigmoid_unipolar_function
-                self.activation_prime = NeuralNetwork.sigmoid_unipolar_prime
+                self.activation_function = self.sigmoid_unipolar_function
+                self.activation_prime = self.sigmoid_unipolar_prime
             else:
-                self.activation_function = NeuralNetwork.tanh
-                self.activation_prime = NeuralNetwork.tanh_prime
+                self.activation_function = self.tanh
+                self.activation_prime = self.tanh_prime
 
         if b.text() == "Hyperbolic tangent function":
             if b.isChecked() == True:
-                self.activation_function = NeuralNetwork.tanh
-                self.activation_prime = NeuralNetwork.tanh_prime
+                self.activation_function = self.tanh
+                self.activation_prime = self.tanh_prime
             else:
-                self.activation_function = NeuralNetwork.sigmoid_unipolar_function
-                self.activation_prime = NeuralNetwork.sigmoid_unipolar_prime
+                self.activation_function = self.sigmoid_unipolar_function
+                self.activation_prime = self.sigmoid_unipolar_prime
 
 
     def open_file_dialog(self):
@@ -170,7 +184,7 @@ class Window(QTabWidget):
     def create_network(self):
 
         input_size = 3
-        output_size = 4
+        output_size = 3
 
         self.network = NeuralNetwork()
         self.network.create_layers(input_size, output_size, self.layer_sizes, self.activation,
@@ -184,7 +198,6 @@ class Window(QTabWidget):
         self.figure.clear()
         G = nx.DiGraph()
 
-        layer_size = 0
         # input layer to first layer edges
         ed = []
         for i in range(0, self.network.layers[0].input_size):
@@ -224,8 +237,51 @@ class Window(QTabWidget):
         nx.draw_networkx_edge_labels(G, pos=pos, font_weight='bold', label_pos=0.85, edge_labels=edge_labels)
 
 
-        self.canvas_create.draw()
+
         self.canvas_train.draw()
+
+    def train_test(self):
+        # training data
+
+        x_train = np.array([[[0, 0, 1]], [[0, 1, 1]], [[1, 0, 1]], [[0, 1, 0]], [[1, 0, 0]], [[1, 1, 1]], [[0, 0, 0]]])
+        y_train = np.array([0, 1, 1, 1, 1, 0, 0]).T
+
+        QApplication.processEvents()
+        for i in range(1, int(self.epochs_number.value())):
+            self.network.train(x_train,
+                               y_train,
+                               epochs=1,
+                               learning_rate=float(self.learning_rate.value()))
+            print('Epoch: '+ str(i) +' error; ' + str(self.network.err))
+            if not i % 10:
+                self.plot_network()
+                QApplication.processEvents()
+
+    def epochs_number_edited(self):
+        self.train_by_steps_button.setText('Train ' + self.epochs_number.text() + ' epochs')
+
+    def randomize(self):
+        self.network.randomize_layers()
+        self.plot_network()
+
+    def sigmoid_unipolar_function(self, x):
+        pos_mask = (x >= 0)
+        neg_mask = (x < 0)
+        z = np.zeros_like(x)
+        z[pos_mask] = np.exp(-x[pos_mask])
+        z[neg_mask] = np.exp(x[neg_mask])
+        top = np.ones_like(x)
+        top[neg_mask] = z[neg_mask]
+        return top / (1 + z)
+
+    def sigmoid_unipolar_prime(self, z):
+        return self.sigmoid_unipolar_function(z) * (1 - self.sigmoid_unipolar_function(z))
+
+    def tanh(self, x):
+        return np.tanh(x)
+
+    def tanh_prime(self, x):
+        return 1 - np.tanh(x) ** 2
 
 
 
