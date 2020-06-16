@@ -9,10 +9,12 @@ class NeuralNetwork:
 
     def __init__(self):
         self.layers = []
+        self.err = 0
 
     def add_layer(self, layer):
         self.layers.append(layer)
 
+    #creates layers of the given input, output and layer sizes
     def create_layers(self, feature_size, output_size, layers_sizes, activation, activation_prime):
 
         if len(layers_sizes) > 0:
@@ -27,6 +29,7 @@ class NeuralNetwork:
         for layer in self.layers:
             layer.initialize_random_weights()
 
+    #predicts values for the input data - essentially feedforwards the net each time
     def predict(self, input_data):
         samples = len(input_data)
         result = []
@@ -50,7 +53,7 @@ class NeuralNetwork:
                 output = x_train[j]
                 for layer in self.layers:
                     output = layer.forward_propagation(output)
-                #print(f'Output = {output}, desired = {y_train[j]}')
+
                 # compute loss (for display purpose only)
                 err += self.mse(y_train[j], output)
 
@@ -58,11 +61,21 @@ class NeuralNetwork:
                 error = self.mse_prime(y_train[j], output)
                 for layer in reversed(self.layers):
                     error = layer.back_propagation(error, learning_rate)
-            print('Amax = ' + str(np.amax(self.layers[0].weights)) + '\n')
+
             # calculate average error on all samples
             err /= samples
+            #print("Epoch: " + str(i) + " error: "+ str(err))
             self.err = err
-            print('epoch %d/%d   error=%f' % (i + 1, epochs, err))
+
+    #calculates mse over given set
+    def calculate_test_mse(self, x_test, y_test):
+        test_err = 0
+        for i in range(len(x_test)):
+            prediction = self.predict(x_test[i])
+            test_err += self.mse(y_test[i], prediction)
+
+        test_err /= len(x_test)
+        return test_err
 
 
 

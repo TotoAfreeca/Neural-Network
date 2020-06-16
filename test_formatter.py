@@ -1,3 +1,4 @@
+from DataFormatter import DataFormatter
 import numpy as np
 from Layer import Layer
 from NeuralNetwork import NeuralNetwork
@@ -25,20 +26,26 @@ def tanh_prime(x):
     return 1-np.tanh(x)**2
 
 
+formatter = DataFormatter('iris.csv')
+
+x_train, y_train = formatter.get_training_set()
+x_test, y_test = formatter.get_test_set()
+input_size, output_size = formatter.get_sizes()
+
+
+
+
 # training data
 
-x_train = np.array([[[0, 0, 1]], [[0, 1, 1]], [[1, 0, 1]], [[0, 1, 0]], [[1, 0, 0]], [[1, 1, 1]], [[0, 0, 0]]])
-y_train = np.array([0, 1, 1, 1, 1, 0, 0]).T
 
 # network
 net = NeuralNetwork()
-net.add_layer(Layer(3, 4, sigmoid_unipolar_function, sigmoid_unipolar_prime))
+net.add_layer(Layer(input_size, 4, sigmoid_unipolar_function, sigmoid_unipolar_prime))
 net.add_layer(Layer(4, 3, sigmoid_unipolar_function, sigmoid_unipolar_prime))
+net.add_layer(Layer(3, 4, sigmoid_unipolar_function, sigmoid_unipolar_prime))
+net.add_layer(Layer(4, output_size, sigmoid_unipolar_function, sigmoid_unipolar_prime))
 
-net.train(x_train, y_train, epochs=20000, learning_rate=0.01)
+net.train(x_train, y_train, epochs=10000, learning_rate=0.02)
 
-# test
-out = net.predict([[1,0,1]])
-print(out)
 
 

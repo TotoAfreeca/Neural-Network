@@ -1,5 +1,5 @@
 from unittest import TestCase
-from neural_network import NeuralNetwork
+from NeuralNetwork import NeuralNetwork
 from Layer import Layer
 import numpy as np
 

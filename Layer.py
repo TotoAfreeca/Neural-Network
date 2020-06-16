@@ -13,7 +13,6 @@ class Layer():
     def forward_propagation(self, input_data):
         self.input = input_data
         self.output = self.activation(np.dot(self.input, self.weights) + self.bias)
-        #self.output = self.activation(np.dot(self.input, self.weights) + self.bias)
         return self.output
 
     def back_propagation(self, output_error, learning_rate):

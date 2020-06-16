@@ -1,6 +1,6 @@
 import numpy as np
 from keras.datasets import mnist
-from neural_network import NeuralNetwork
+from NeuralNetwork import NeuralNetwork
 from Layer import Layer
 from keras.utils import np_utils
 
@@ -55,7 +55,7 @@ net.add_layer(Layer(16, 10, tanh, tanh_prime))                    # input_shape=
 
 # train on 1000 samplesghkdsaw
 # as we didn't implemented mini-batch GD, training will be pretty slow if we update at each iteration on 60000 samples...
-net.train(x_train[0:1000], y_train[0:1000], epochs=150, learning_rate=0.05)
+net.train(x_train[0:1000], y_train[0:1000], epochs=30, learning_rate=0.05)
 
 # test on 3 samples
 out = net.predict(x_test[2501:2510])
