@@ -3,6 +3,8 @@ import numpy as np
 from Layer import Layer
 from NeuralNetwork import NeuralNetwork
 
+#Test script used while working on the formatter
+
 
 def sigmoid_unipolar_function(x):
     pos_mask = (x >= 0)

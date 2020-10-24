@@ -1,10 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout, QLineEdit, QFormLayout, QWidget, \
-    QTabWidget, QHBoxLayout, QSpinBox, QLabel, QDoubleSpinBox, QTextEdit, QRadioButton, QFileDialog, QErrorMessage, \
-    QPlainTextEdit
+from PyQt5.QtWidgets import QDialog, QTabWidget, QHBoxLayout, QSpinBox, QLabel, QDoubleSpinBox, QTextEdit, QRadioButton, \
+    QFileDialog, QErrorMessage, \
+    QApplication, QPushButton, QVBoxLayout, QLineEdit, QFormLayout, QWidget, QPlainTextEdit
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5 import QtCore, QtGui
+
 # Plotting
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,11 +14,8 @@ from DataFormatter import DataFormatter
 import time
 from networkx.drawing.nx_agraph import graphviz_layout
 
-from matplotlib import cm, colors
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
-
 from NeuralNetwork import NeuralNetwork
+from Functions import sigmoid_unipolar_function, sigmoid_unipolar_prime, tanh, tanh_prime
 import numpy as np
 
 class Window(QTabWidget):
@@ -26,7 +24,8 @@ class Window(QTabWidget):
 
         np.set_printoptions(suppress=True)
         np.set_printoptions(linewidth=np.inf)
-        # Windows
+
+        # Tabs
         self.create_tab = QWidget()
         self.addTab(self.create_tab, "Create")
 
@@ -43,34 +42,6 @@ class Window(QTabWidget):
         self.test_error = []
 
         # Create Tab
-        regex = r"^(\s*(\+)?\d+(?:\.\d)?\s*,\s*)+(-|\+)?\d+(?:\.\d+)?\s*$"
-        #regex = r"/^(\s*|\d+)$/"
-        validator = QtGui.QRegExpValidator(QtCore.QRegExp(regex), self)
-        self.layers_line_edit = QLineEdit()
-        self.layers_line_edit.textEdited.connect(self.layers_number_change)
-        self.layers_line_edit.setValidator(validator)
-
-        self.file_button = QPushButton("Read file", self)
-        self.file_button.clicked.connect(self.open_file_dialog)
-        self.file_text_edit = QLineEdit()
-        self.file_text_edit.setReadOnly(True)
-        self.network_exists = False
-        self.input_size = 0
-        self.output_size = 0
-
-        self.unipolar = QRadioButton("Unipolar sigmoid function")
-        self.unipolar.toggled.connect(lambda: self.select_option(self.unipolar))
-        self.unipolar.setChecked(True)
-        self.tanh = QRadioButton("Hyperbolic tangent function")
-        self.tanh.toggled.connect(lambda: self.select_option(self.tanh))
-
-        self.activation_function = self.sigmoid_unipolar_function
-        self.activation_prime = self.sigmoid_unipolar_prime
-
-        self.figure = plt.figure(num=1, figsize=(100, 100))
-        self.canvas_create = FigureCanvas(self.figure)
-
-
 
         #train tab
 
@@ -112,8 +83,6 @@ class Window(QTabWidget):
         self.error_figure = plt.figure(num=2, figsize=(100, 100))
         self.canvas_error = FigureCanvas(self.error_figure)
 
-
-
         self.stop = False
         self.stop_button_error = QPushButton("Stop")
         self.stop_button_error.clicked.connect(self.change_stop)
@@ -133,9 +102,34 @@ class Window(QTabWidget):
 
 
 
-
-
     def create_tab_ui(self):
+        regex = r"^(\s*(\+)?\d+(?:\.\d)?\s*,\s*)+(-|\+)?\d+(?:\.\d+)?\s*$"
+        #regex = r"/^(\s*|\d+)$/"
+        validator = QtGui.QRegExpValidator(QtCore.QRegExp(regex), self)
+        self.layers_line_edit = QLineEdit()
+        self.layers_line_edit.textEdited.connect(self.layers_number_change)
+        self.layers_line_edit.setValidator(validator)
+
+        self.file_button = QPushButton("Read file", self)
+        self.file_button.clicked.connect(self.open_file_dialog)
+        self.file_text_edit = QLineEdit()
+        self.file_text_edit.setReadOnly(True)
+        self.network_exists = False
+        self.input_size = 0
+        self.output_size = 0
+
+        self.unipolar = QRadioButton("Unipolar sigmoid function")
+        self.unipolar.toggled.connect(lambda: self.function_select(self.unipolar))
+        self.unipolar.setChecked(True)
+        self.tanh = QRadioButton("Hyperbolic tangent function")
+        self.tanh.toggled.connect(lambda: self.function_select(self.tanh))
+
+        self.activation_function = sigmoid_unipolar_function
+        self.activation_prime = sigmoid_unipolar_prime
+
+        self.figure = plt.figure(num=1, figsize=(100, 100))
+        self.canvas_create = FigureCanvas(self.figure)
+
 
 
         toolbar_create = NavigationToolbar(self.canvas_create, self)
@@ -181,9 +175,6 @@ class Window(QTabWidget):
         train_data.addWidget(QLabel('No. epochs'))
         train_data.addWidget(self.epochs_number)
         train_form.addRow('Learning rate:', train_data)
-
-
-
 
         train_form.addRow(toolbar_train)
 
@@ -240,23 +231,23 @@ class Window(QTabWidget):
         self.summary_tab.setLayout(summary_form)
 
 
-    def select_option(self, b):
+    def function_select(self, b):
 
         if b.text() == "Unipolar sigmoid function":
             if b.isChecked() == True:
-                self.activation_function = self.sigmoid_unipolar_function
-                self.activation_prime = self.sigmoid_unipolar_prime
+                self.activation_function = sigmoid_unipolar_function
+                self.activation_prime = sigmoid_unipolar_prime
             else:
-                self.activation_function = self.tanh_function
-                self.activation_prime = self.tanh_prime
+                self.activation_function = tanh
+                self.activation_prime = tanh_prime
 
         if b.text() == "Hyperbolic tangent function":
             if b.isChecked() == True:
-                self.activation_function = self.tanh_function
-                self.activation_prime = self.tanh_prime
+                self.activation_function = tanh
+                self.activation_prime = tanh_prime
             else:
-                self.activation_function = self.sigmoid_unipolar_function
-                self.activation_prime = self.sigmoid_unipolar_prime
+                self.activation_function = sigmoid_unipolar_function
+                self.activation_prime = sigmoid_unipolar_prime
 
 
     def open_file_dialog(self):
@@ -277,9 +268,6 @@ class Window(QTabWidget):
         if self.layers_line_edit.text():
             self.layer_sizes = [int(val) for val in self.layers_line_edit.text().split(",") if val and val not in '0+ ']
             print(self.layer_sizes)
-
-
-
 
     def create_network(self):
 
@@ -318,6 +306,9 @@ class Window(QTabWidget):
             self.update_labels()
             self.canvas_error.draw()
 
+
+
+    #Probably the ugliest piece of code i've ever wrote, probably can vectorize it somehow
     def plot_network(self, canvas):
         plt.figure(1)
         self.figure.clear()
@@ -391,11 +382,14 @@ class Window(QTabWidget):
                 if self.network.err <= self.max_error.value():
                     break
             else:
+                self.plot_error()
                 self.plot_network(self.canvas_create)
                 self.plot_network(self.canvas_train)
                 break
+                
         self.stop = True
         self.update_labels()
+
         self.plot_network(self.canvas_create)
         self.plot_network(self.canvas_train)
         self.timer.stop()
@@ -416,15 +410,17 @@ class Window(QTabWidget):
 
                 self.epoch_sum += 1
                 self.error_list.append(np.round(self.network.err, 5))
+
                 #self.test_error.append(np.round(self.network.calculate_test_mse(self.x_test, self.y_test), 5))
                 if self.network.err <= self.max_error.value():
+                    self.plot_error()
                     break
-                #self.plot_error()
                 QApplication.processEvents()
         self.stop = True
+
         self.plot_network(self.canvas_create)
         self.plot_network(self.canvas_train)
-        self.timer.stop()
+
 
 
     def update_labels(self):
@@ -457,7 +453,10 @@ class Window(QTabWidget):
         self.summary.appendPlainText("TEST RESULTS BELOW")
         self.summary.appendPlainText("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
         for i in range(len(self.x_test)):
-            self.summary.appendPlainText(str(np.round(self.network.predict(self.x_test[i]),3)))
+            predicted = np.round(self.network.predict(self.x_test[i]), 3)
+
+            self.summary.appendPlainText(str(i))
+            self.summary.appendPlainText(str(predicted))
             self.summary.appendPlainText(str(self.y_test[i]))
 
 

@@ -1,8 +1,5 @@
 import numpy as np
 from Layer import Layer
-import pandas as pd
-import matplotlib.pyplot as plt
-import random
 
 
 class NeuralNetwork:
@@ -13,6 +10,7 @@ class NeuralNetwork:
 
     def add_layer(self, layer):
         self.layers.append(layer)
+
 
     #creates layers of the given input, output and layer sizes
     def create_layers(self, feature_size, output_size, layers_sizes, activation, activation_prime):
@@ -62,7 +60,7 @@ class NeuralNetwork:
                 for layer in reversed(self.layers):
                     error = layer.back_propagation(error, learning_rate)
 
-            # calculate average error on all samples
+            # calculate average error on all samples, sets in in the field
             err /= samples
             #print("Epoch: " + str(i) + " error: "+ str(err))
             self.err = err
@@ -85,24 +83,7 @@ class NeuralNetwork:
     def mse_prime(self, y_true, y_pred):
         return 2 * (y_pred - y_true) / y_true.size;
 
-    def sigmoid_unipolar_function(self, x):
-        pos_mask = (x >= 0)
-        neg_mask = (x < 0)
-        z = np.zeros_like(x)
-        z[pos_mask] = np.exp(-x[pos_mask])
-        z[neg_mask] = np.exp(x[neg_mask])
-        top = np.ones_like(x)
-        top[neg_mask] = z[neg_mask]
-        return top / (1 + z)
 
-    def sigmoid_unipolar_prime(self, z):
-        return self.sigmoid_unipolar_function(z) * (1 - self.sigmoid_unipolar_function(z))
-
-    def tanh(self, x):
-        return np.tanh(x)
-
-    def tanh_prime(self, x):
-        return 1 - np.tanh(x) ** 2
 
 
 

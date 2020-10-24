@@ -1,5 +1,7 @@
 import numpy as np
 
+
+# A class that emulates the behaviour of a simple layer of neurons
 class Layer():
 
     def __init__(self, input_size, output_size, activation, activation_prime):
@@ -10,21 +12,14 @@ class Layer():
         self.activation = activation
         self.activation_prime = activation_prime
 
+    #feed forwards the data
     def forward_propagation(self, input_data):
         self.input = input_data
         self.output = self.activation(np.dot(self.input, self.weights) + self.bias)
         return self.output
 
+    #backprop
     def back_propagation(self, output_error, learning_rate):
-
-        #delta = output_error * self.activation_prime(self.output)
-        #layer_adjustment = self.input.T.dot(delta)
-
-        #self.weights += learning_rate * layer_adjustment
-        #self.bias += learning_rate * layer_adjustment
-
-        #return delta.dot(self.weights.T)
-
 
         input_error = np.dot(output_error, self.weights.T)
         weights_error = np.dot(self.input.T, output_error)

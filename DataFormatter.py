@@ -1,6 +1,12 @@
 import pandas as pd
 import numpy as np
 
+from sklearn import preprocessing
+
+
+# Simple class to perform basic data encoding, train/test splitting etc. on a file
+# note that the data need to be learning ready - means it has to contain all the data of appropriate format
+# aside from the target variable - it is automatically encoded into multiple column variable using one-hot-encoding
 
 class DataFormatter:
 
@@ -10,11 +16,18 @@ class DataFormatter:
         self.input_size = 0
         self.output_size = 0
 
+        mm_scaler = preprocessing.MinMaxScaler()
+
+
         train = self.dataframe.sample(frac=0.8)
+
+
         test = self.dataframe.drop(train.index)
+
 
         self.input_size = len(self.dataframe.columns) - 1
         self.x_train = train.iloc[:, :-1].values
+        self.x_train = mm_scaler.fit_transform(self.x_train)
         self.x_train = self.x_train.reshape(self.x_train.shape[0], 1, self.input_size)
         self.x_train = self.x_train.astype('float32')
 
@@ -25,6 +38,7 @@ class DataFormatter:
         self.y_train = onehot.values
 
         self.x_test = test.iloc[:, :-1].values
+        self.x_test = mm_scaler.fit_transform(self.x_test)
         self.x_test = self.x_test.reshape(self.x_test.shape[0], 1, self.input_size)
         self.x_test = self.x_test.astype('float32')
 
